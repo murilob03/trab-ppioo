@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-fn is_number(s: &str) -> bool {
+pub fn is_number(s: &str) -> bool {
     s.parse::<f64>().is_ok()
 }
 
@@ -57,4 +57,20 @@ pub fn shunt_yard(tokens_infix: Vec<String>) -> Vec<String> {
     }
 
     queue
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tokenizer::tokenize;
+
+    use super::*;
+
+    #[test]
+    fn test_shunt_yard() {
+        let test_expression = tokenize(String::from("3 + 18 - 40 * (25 / 22 + 4)"));
+        let expected_tokens: Vec<String> = tokenize(String::from("3 18 + 40 25 22 / 4 + * -"));
+        let result_tokens = shunt_yard(test_expression);
+
+        assert_eq!(result_tokens, expected_tokens);
+    }
 }
