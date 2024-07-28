@@ -39,12 +39,18 @@ impl Tree {
     }
 
     pub fn evaluate(&self) -> f64 {
-        self.root.evaluate()
+        let mut tree_str = self.to_string();
+        println!("{}", tree_str);
+        self.root.evaluate(&mut tree_str)
+    }
+
+    pub fn to_string(&self) -> String {
+        self.root.to_string()
     }
 }
 
 impl Node {
-    fn evaluate(&self) -> f64 {
+    fn evaluate(&self, tree_str: &mut String) -> f64 {
         match self {
             Node::String(value) => value.parse().expect("Invalid number"),
             Node::Operation {
@@ -52,27 +58,33 @@ impl Node {
                 left,
                 right,
             } => {
-                let left_val = left.evaluate();
-                let right_val = right.evaluate();
-                match operator.as_str() {
-                    "+" => {
-                        println!("{} + {}", left_val, right_val);
-                        left_val + right_val
-                    }
-                    "-" => {
-                        println!("{} - {}", left_val, right_val);
-                        left_val - right_val
-                    }
-                    "*" => {
-                        println!("{} * {}", left_val, right_val);
-                        left_val * right_val
-                    }
-                    "/" => {
-                        println!("{} / {}", left_val, right_val);
-                        left_val / right_val
-                    }
-                    _ => panic!("Unknowm operator!"),
-                }
+                let left_val = left.evaluate(tree_str);
+                let right_val = right.evaluate(tree_str);
+                let op_str =
+                    format!("({} {} {})", left_val.to_string(), operator, right_val.to_string());
+                let result = match operator.as_str() {
+                    "+" => left_val + right_val,
+                    "-" => left_val - right_val,
+                    "*" => left_val * right_val,
+                    "/" => left_val / right_val,
+                    _ => panic!("Unknown operator!"),
+                };
+
+                *tree_str = tree_str.replace(&op_str, &result.to_string());
+                println!("{}", tree_str);   
+
+                result
+            }
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            Node::String(value) => value.clone(),
+            Node::Operation { operator, left, right, .. } => {
+                let left_expr = left.to_string();
+                let right_expr = right.to_string();
+                format!("({} {} {})", left_expr, operator, right_expr)
             }
         }
     }
