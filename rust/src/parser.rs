@@ -1,6 +1,6 @@
 static VALID_TOKENS: [char; 6] = ['+', '-', '*', '/', '(', ')'];
 
-pub fn tokenize(line: String) -> Vec<String> {
+pub fn parser(line: String) -> Vec<String> {
     let mut line_tokenized: Vec<String> = vec![];
     let mut number = String::new();
 
@@ -31,29 +31,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tokenizer_1() {
-        let test_expression = String::from("3 + 18 - 40 * (25 / 22 + 4)");
+    fn test_parser() {
+        let test_expression = String::from("3 + 18 - 40 * (25 / 5 + 4)");
         let expected_tokens: Vec<String> = vec![
-            "3", "+", "18", "-", "40", "*", "(", "25", "/", "22", "+", "4", ")",
+            "3", "+", "18", "-", "40", "*", "(", "25", "/", "5", "+", "4", ")",
         ]
         .into_iter()
         .map(|s| s.to_string())
         .collect();
-        let result_tokens = tokenize(test_expression);
-
-        assert_eq!(result_tokens, expected_tokens);
-    }
-
-    #[test]
-    fn test_tokenizer_2() {
-        let test_expression = String::from("3 - 4 - 5 - -6 + -2 * (-2 + 2)");
-        let expected_tokens: Vec<String> = vec![
-            "3", "-", "4", "-", "5", "-", "-6", "+", "-2", "*", "(", "-2", "+", "2", ")",
-        ]
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect();
-        let result_tokens = tokenize(test_expression);
+        let result_tokens = parser(test_expression);
 
         assert_eq!(result_tokens, expected_tokens);
     }

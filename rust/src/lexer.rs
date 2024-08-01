@@ -1,4 +1,5 @@
 use crate::shunt_yard::is_number;
+use crate::shunt_yard::shunt_yard;
 
 enum Node {
     String(String),
@@ -38,7 +39,7 @@ impl Tree {
         Tree { root }
     }
 
-    pub fn evaluate(&self) -> f64 {
+    pub fn evaluate(&self) -> i64 {
         let mut tree_str = self.to_string();
         println!("{}", tree_str);
         self.root.evaluate(&mut tree_str)
@@ -50,7 +51,7 @@ impl Tree {
 }
 
 impl Node {
-    fn evaluate(&self, tree_str: &mut String) -> f64 {
+    fn evaluate(&self, tree_str: &mut String) -> i64 {
         match self {
             Node::String(value) => value.parse().expect("Invalid number"),
             Node::Operation {
@@ -60,8 +61,12 @@ impl Node {
             } => {
                 let left_val = left.evaluate(tree_str);
                 let right_val = right.evaluate(tree_str);
-                let op_str =
-                    format!("({} {} {})", left_val.to_string(), operator, right_val.to_string());
+                let op_str = format!(
+                    "({} {} {})",
+                    left_val.to_string(),
+                    operator,
+                    right_val.to_string()
+                );
                 let result = match operator.as_str() {
                     "+" => left_val + right_val,
                     "-" => left_val - right_val,
@@ -71,7 +76,7 @@ impl Node {
                 };
 
                 *tree_str = tree_str.replace(&op_str, &result.to_string());
-                println!("{}", tree_str);   
+                println!("{}", tree_str);
 
                 result
             }
@@ -81,11 +86,22 @@ impl Node {
     fn to_string(&self) -> String {
         match self {
             Node::String(value) => value.clone(),
-            Node::Operation { operator, left, right, .. } => {
+            Node::Operation {
+                operator,
+                left,
+                right,
+                ..
+            } => {
                 let left_expr = left.to_string();
                 let right_expr = right.to_string();
                 format!("({} {} {})", left_expr, operator, right_expr)
             }
         }
     }
+}
+
+pub fn lexer(tokens: Vec<String>) -> Tree {
+    let tokens_postfix = shunt_yard(tokens);
+
+    Tree::parse_from_vector(tokens_postfix)
 }
