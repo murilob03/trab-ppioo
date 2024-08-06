@@ -22,90 +22,90 @@ def lexer(expressao: str):
     return tokens
 
 
+precedence = {"*": 1, "/": 1, "+": 0, "-": 0}
+
+
+def is_number(string):
+    try:
+        int(string)
+        return True
+    except ValueError as e:
+        return False
+
+
+def reverse_polish(tokens):
+    stack = []
+    queue = []
+
+    for token in tokens:
+        if is_number(token):
+            queue.append(token)
+            continue
+
+        if token in precedence.keys():
+            while (
+                stack
+                and stack[-1] in precedence.keys()
+                and precedence[stack[-1]] >= precedence[token]
+            ):
+                queue.append(stack.pop())
+            stack.append(token)
+            continue
+
+        if token == "(":
+            stack.append(token)
+            continue
+
+        if token == ")":
+            while stack[-1] != "(":
+                queue.append(stack.pop())
+            stack.pop()
+            continue
+
+    while stack:
+        queue.append(stack.pop())
+
+    return queue
+
+
 def parser(tokens):
     stack = []
 
     for token in tokens:
-        if (
-            token.lstrip("-").replace(".", "").isdigit()
-        ):  # Verifica números decimais e negativos
-            actual_node = Node(token)
-            stack.append(actual_node)
+        if is_number(token):
+            stack.append(token)
         else:
-            actual_node = Node(token)
-            if len(stack) >= 2:
-                actual_node.right = stack.pop()
-                actual_node.left = stack.pop()
-            stack.append(actual_node)
+            node = Node(token)
 
-    return stack[0] if stack else None
+            node.right = stack.pop()
+            if isinstance(node.right, Node):
+                node.right.parent = node
 
+            node.left = stack.pop()
+            if isinstance(node.left, Node):
+                node.left.parent = node
 
-def eval_step(node, tree):
-    if node is None:
-        return 0
+            stack.append(node)
 
-    # Se for um nó folha, retorna o valor do token
-    if node.left is None and node.right is None:
-        return float(node.token)
-
-    left_val = eval_step(node.left, tree)
-    right_val = eval_step(node.right, tree)
-
-    if node.token == "+":
-        result = left_val + right_val
-    elif node.token == "-":
-        result = left_val - right_val
-    elif node.token == "*":
-        result = left_val * right_val
-    elif node.token == "/":
-        result = left_val / right_val
-    else:
-        raise ValueError(f"Operação desconhecida: {node.token}")
-
-    # Atualiza o token do nó atual com o resultado da operação
-    node.token = str(result)
-
-    # Remove os filhos, pois a operação já foi realizada
-    node.left = None
-    node.right = None
-
-    # Imprime a árvore após a operação
-    print("\nÁrvore após realizar a operação:")
-    tree.print_tree(tree.root)
-    expression_str = tree_to_string(tree.root)
-    print("Expression String:", expression_str)
-
-    return result
+    return stack.pop()
 
 
-def post_order_traversal(node):
-    result = []
+def eval_tree(root):
+    print(root)
 
-    def traverse(node):
-        if node is None:
-            return
-        traverse(node.left)
-        traverse(node.right)
-        result.append(node.token)
+    while not root.is_leaf():
+        root.eval_step()
+        print(root)
 
-    traverse(node)
-    return result
+    res = root.eval_leaf()
+    print(res)
+    return res
 
 
-def tree_to_string(node):
-    if node is None:
-        return ""
+def eval_exp(exp_str):
+    tokens = lexer(exp_str)
+    rev_pol = reverse_polish(tokens)
+    tree_root = parser(rev_pol)
 
-    # Se for um nó folha, retorna o valor do token
-    if node.left is None and node.right is None:
-        return node.token
-
-    # Monta a string da sub-árvore esquerda
-    left_str = tree_to_string(node.left)
-
-    # Monta a string da sub-árvore direita
-    right_str = tree_to_string(node.right)
-
-    # Retorna a expressão completa com parênteses
-    return f"({left_str} {node.token} {right_str})"
+    res = eval_tree(tree_root)
+    return res

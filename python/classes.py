@@ -1,55 +1,60 @@
 class Node:
     def __init__(self, token):
-        self.left = None
-        self.right = None
-        self.token = token
+        self.parent: Node | None = None
+        self.left: Node | None | str = None
+        self.right: Node | None | str = None
+        self.token: str = token
 
-class BinaryTree:
-    def __init__(self):
-        self.root = None
+    def is_leaf(self):
+        return not isinstance(self.left, Node) and not isinstance(self.right, Node)
 
-    def _get_precedence(self, op):
-        precedence = {
-            '+': 1,
-            '-': 1,
-            '*': 2,
-            '/': 2,
-            '(': 0,
-            ')': 0
-        }
-        return precedence.get(op, -1)
+    def eval_leaf(self):
+        if self.is_leaf():
+            left_val = int(self.left)  # type: ignore
+            right_val = int(self.right)  # type: ignore
+            if self.token == "+":
+                return str(left_val + right_val)
+            elif self.token == "-":
+                return str(left_val - right_val)
+            elif self.token == "*":
+                return str(left_val * right_val)
+            elif self.token == "/":
+                return str(int(left_val / right_val))
+        else:
+            raise ValueError("This node is not a leaf node.")
 
-    def reverse_polish(self, tokens, operators):
-        queue = []
-        operatorStack = []
+    def eval_step(self):
+        # Use BFS or DFS to find the bottom leaf
+        stack = [(self, 0)]
+        bottom_leaf = self
+        max_depth = 0
 
-        for token in tokens:
-            if token.lstrip('-').replace('.', '').isdigit():  # Verifica números decimais e negativos
-                queue.append(token)
-            elif token == '(':
-                operatorStack.append(token)
-            elif token == ')':
-                while operatorStack and operatorStack[-1] != '(':
-                    queue.append(operatorStack.pop())
-                operatorStack.pop()  # Remove o '(' da pilha
-            elif token in operators:
-                while (operatorStack and operatorStack[-1] != '(' and
-                       self._get_precedence(operatorStack[-1]) >= self._get_precedence(token)):
-                    queue.append(operatorStack.pop())
-                operatorStack.append(token)
-            print("OpStack: " + str(operatorStack))
-            print("Queue: " + str(queue))
+        while stack:
+            node, depth = stack.pop()
+            if node.is_leaf() and depth >= max_depth:
+                bottom_leaf = node
+                max_depth = depth
+            if isinstance(node.left, Node):
+                stack.append((node.left, depth + 1))  # type: ignore
+            if isinstance(node.right, Node):
+                stack.append((node.right, depth + 1))  # type: ignore
 
-        while operatorStack:
-            queue.append(operatorStack.pop())
+        # Evaluate the bottom leaf node
+        leaf_value = bottom_leaf.eval_leaf()
 
-        print("Final Queue: " + str(queue))
-        return queue
+        # Update the parent node
+        if bottom_leaf.parent:  # verify if self is not the root
+            if bottom_leaf.parent.left is bottom_leaf:
+                bottom_leaf.parent.left = leaf_value
+            else:
+                bottom_leaf.parent.right = leaf_value
 
-    def print_tree(self, node, level=0, label="."):
-        prefix = " " * (level * 4)
-        print(prefix + label + ": " + str(node.token))
-        if node.left:
-            self.print_tree(node.left, level + 1, "L")
-        if node.right:
-            self.print_tree(node.right, level + 1, "R")
+    def __str__(self):
+        # Monta a string da sub-árvore esquerda
+        left_str = str(self.left)
+
+        # Monta a string da sub-árvore direita
+        right_str = str(self.right)
+
+        # Retorna a expressão completa com parênteses
+        return f"({left_str} {self.token} {right_str})"
