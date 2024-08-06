@@ -1,12 +1,18 @@
 from classes import Node
 
 
-def lexer(expressao: str):
+def lexer(expression: str) -> list[str]:
+    """
+    Tokenize the input mathematical expression into operators and operands.
+
+    :param expression: A string containing the mathematical expression.
+    :return: A list of tokens (operators and operands).
+    """
     valid_ops = ["+", "-", "*", "/", "(", ")"]
     tokens = []
     num: str = ""
 
-    for c in expressao:
+    for c in expression:
         if c.isdigit() or c == "-":
             num += c
         else:
@@ -25,42 +31,47 @@ def lexer(expressao: str):
 precedence = {"*": 1, "/": 1, "+": 0, "-": 0}
 
 
-def is_number(string):
+def is_number(string: str) -> bool:
+    """
+    Check if a string is a number.
+
+    :param string: The string to check.
+    :return: True if the string represents a number, False otherwise.
+    """
     try:
         int(string)
         return True
-    except ValueError as e:
+    except ValueError:
         return False
 
 
-def reverse_polish(tokens):
+def reverse_polish(tokens: list[str]) -> list[str]:
+    """
+    Convert infix expression tokens to Reverse Polish Notation (RPN).
+
+    :param tokens: A list of tokens from the infix expression.
+    :return: A list of tokens in Reverse Polish Notation.
+    """
     stack = []
     queue = []
 
     for token in tokens:
         if is_number(token):
             queue.append(token)
-            continue
-
-        if token in precedence.keys():
+        elif token in precedence:
             while (
                 stack
-                and stack[-1] in precedence.keys()
+                and stack[-1] in precedence
                 and precedence[stack[-1]] >= precedence[token]
             ):
                 queue.append(stack.pop())
             stack.append(token)
-            continue
-
-        if token == "(":
+        elif token == "(":
             stack.append(token)
-            continue
-
-        if token == ")":
-            while stack[-1] != "(":
+        elif token == ")":
+            while stack and stack[-1] != "(":
                 queue.append(stack.pop())
-            stack.pop()
-            continue
+            stack.pop()  # Remove the "(" from the stack
 
     while stack:
         queue.append(stack.pop())
@@ -68,7 +79,13 @@ def reverse_polish(tokens):
     return queue
 
 
-def parser(tokens):
+def parser(tokens: list[str]) -> Node:
+    """
+    Parse tokens in Reverse Polish Notation into an expression tree.
+
+    :param tokens: A list of tokens in Reverse Polish Notation.
+    :return: The root node of the expression tree.
+    """
     stack = []
 
     for token in tokens:
@@ -90,22 +107,34 @@ def parser(tokens):
     return stack.pop()
 
 
-def eval_tree(root):
+def eval_tree(root: Node) -> str:
+    """
+    Evaluate the expression tree.
+
+    :param root: The root node of the expression tree.
+    :return: The result of the evaluated expression.
+    """
     print(root)
 
     while not root.is_leaf():
         root.eval_step()
         print(root)
 
-    res = root.eval_leaf()
-    print(res)
-    return res
+    result = root.eval_leaf()
+    print(result)
+    return result
 
 
-def eval_exp(exp_str):
+def eval_exp(exp_str: str) -> str:
+    """
+    Evaluate a mathematical expression given as a string.
+
+    :param exp_str: The mathematical expression as a string.
+    :return: The result of the evaluated expression as a string.
+    """
     tokens = lexer(exp_str)
     rev_pol = reverse_polish(tokens)
     tree_root = parser(rev_pol)
 
-    res = eval_tree(tree_root)
-    return res
+    result = eval_tree(tree_root)
+    return result
